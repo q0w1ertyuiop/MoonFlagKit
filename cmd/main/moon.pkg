@@ -1,0 +1,7 @@
+// import {
+//   "python123/moonroutekit" @lib,
+// }
+
+options(
+  "is-main": true,
+)
