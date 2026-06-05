@@ -8,4 +8,4 @@
 - [x] Project has no external MoonBit dependency.
 - [x] GitLink and GitHub links are included in the application material.
 - [ ] Remote GitLink repository has been created and pushed.
-- [ ] Remote GitHub repository has been created and pushed.
+- [x] Remote GitHub repository has been created and pushed.
