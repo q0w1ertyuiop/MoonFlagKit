@@ -46,6 +46,13 @@ pub(all) struct MatchResult {
 } derive(Eq, Debug)
 
 ///|
+pub(all) struct RouteDiagnostic {
+  kind : String
+  route : String
+  message : String
+} derive(Eq, Debug)
+
+///|
 pub(all) enum RouteError {
   MissingLeadingSlash(Int)
   EmptySegment(Int)
@@ -110,6 +117,44 @@ pub fn reverse(table : RouteTable, name : String, params : Array[Param]) -> Resu
     }
   }
   Err(UnknownRoute(name))
+}
+
+///|
+pub fn check_conflicts(table : RouteTable) -> Array[RouteDiagnostic] {
+  let diagnostics : Array[RouteDiagnostic] = []
+  for i in 0..<table.routes.length() {
+    let current = table.routes[i]
+    let mut reported = false
+    for j in 0..<i {
+      let previous = table.routes[j]
+      if !reported && same_method_space(previous.route.http_method, current.route.http_method) {
+        if previous.route.pattern == current.route.pattern {
+          diagnostics.push({
+            kind: "duplicate",
+            route: current.route.name,
+            message: "duplicates " + previous.route.name + " on " + current.route.http_method + " " + current.route.pattern,
+          })
+          reported = true
+        }
+      }
+    }
+    for j in 0..<i {
+      let previous = table.routes[j]
+      if !reported && same_method_space(previous.route.http_method, current.route.http_method) {
+        if previous.route.pattern == current.route.pattern {
+          ()
+        } else if shadows(previous.compiled, current.compiled) {
+          diagnostics.push({
+            kind: "shadowed",
+            route: current.route.name,
+            message: "shadowed by " + previous.route.name,
+          })
+          reported = true
+        }
+      }
+    }
+  }
+  diagnostics
 }
 
 ///|
@@ -210,6 +255,46 @@ fn lookup_param(params : Array[Param], key : String) -> String? {
     }
   }
   None
+}
+
+///|
+fn same_method_space(left : String, right : String) -> Bool {
+  left == right || left == "ANY" || right == "ANY"
+}
+
+///|
+fn shadows(previous : RoutePattern, current : RoutePattern) -> Bool {
+  for i in 0..<previous.segments.length() {
+    if i >= current.segments.length() {
+      return false
+    }
+    match previous.segments[i] {
+      Wildcard(_) => return prefix_matches(previous, current, i)
+      Static(value) =>
+        match current.segments[i] {
+          Static(other) => if value != other { return false }
+          _ => return false
+        }
+      Param(_) => ()
+    }
+  }
+  false
+}
+
+///|
+fn prefix_matches(previous : RoutePattern, current : RoutePattern, until : Int) -> Bool {
+  for i in 0..<until {
+    match previous.segments[i] {
+      Static(value) =>
+        match current.segments[i] {
+          Static(other) => if value != other { return false }
+          _ => return false
+        }
+      Param(_) => ()
+      Wildcard(_) => ()
+    }
+  }
+  true
 }
 
 ///|

@@ -121,3 +121,17 @@ test "reverse reports missing params and unknown route names" {
     Ok(_) => abort("expected unknown route error")
   }
 }
+
+///|
+test "diagnose duplicate routes and wildcard shadowing" {
+  let table = @moonroutekit.empty_table()
+  let table = add_ok(table, { name: "assets.any", http_method: "GET", pattern: "/assets/*path", handler: "asset" })
+  let table = add_ok(table, { name: "assets.logo", http_method: "GET", pattern: "/assets/logo", handler: "logo" })
+  let table = add_ok(table, { name: "assets.copy", http_method: "GET", pattern: "/assets/logo", handler: "copy" })
+  let diagnostics = @moonroutekit.check_conflicts(table)
+  assert_eq(diagnostics.length(), 2)
+  assert_eq(diagnostics[0].kind, "shadowed")
+  assert_eq(diagnostics[0].route, "assets.logo")
+  assert_eq(diagnostics[1].kind, "duplicate")
+  assert_eq(diagnostics[1].route, "assets.copy")
+}
