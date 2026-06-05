@@ -58,6 +58,16 @@ test "reject malformed path patterns" {
       assert_eq(@moonroutekit.format_error(err), "column 9: wildcard must be the final segment")
     Ok(_) => abort("expected wildcard position error")
   }
+  match @moonroutekit.compile_pattern("/users//:id") {
+    Err(err) =>
+      assert_eq(@moonroutekit.format_error(err), "column 8: empty path segment")
+    Ok(_) => abort("expected empty segment error")
+  }
+  match @moonroutekit.compile_pattern("/users/:bad-name") {
+    Err(err) =>
+      assert_eq(@moonroutekit.format_error(err), "column 9: invalid parameter name bad-name")
+    Ok(_) => abort("expected invalid parameter name error")
+  }
 }
 
 ///|
@@ -73,6 +83,16 @@ test "match routes by method and extract params" {
     None => abort("expected route match")
   }
   assert_true(@moonroutekit.match_route(table, "POST", "/users/42") is None)
+}
+
+///|
+test "match root route" {
+  let table = @moonroutekit.empty_table()
+  let table = add_ok(table, { name: "home", http_method: "GET", pattern: "/", handler: "home" })
+  match @moonroutekit.match_route(table, "GET", "/") {
+    Some(result) => assert_eq(result.route.name, "home")
+    None => abort("expected root route match")
+  }
 }
 
 ///|
