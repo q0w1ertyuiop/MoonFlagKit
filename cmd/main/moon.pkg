@@ -1,5 +1,5 @@
 import {
-  "python123/moonroutekit" @routekit
+  "python123/moonroutekit" @routekit,
 }
 
 options(

@@ -22,7 +22,9 @@ fn main {
     println("none")
   } else {
     for diagnostic in diagnostics {
-      println(diagnostic.kind + " " + diagnostic.route + ": " + diagnostic.message)
+      println(
+        diagnostic.kind + " " + diagnostic.route + ": " + diagnostic.message,
+      )
     }
   }
 }
@@ -33,7 +35,7 @@ fn add_route(
   name : String,
   http_method : String,
   pattern : String,
-  handler : String
+  handler : String,
 ) -> @routekit.RouteTable {
   match @routekit.add_route(table, { name, http_method, pattern, handler }) {
     Ok(next) => next
@@ -42,7 +44,11 @@ fn add_route(
 }
 
 ///|
-fn show_match(table : @routekit.RouteTable, verb : String, path : String) -> Unit {
+fn show_match(
+  table : @routekit.RouteTable,
+  verb : String,
+  path : String,
+) -> Unit {
   match @routekit.match_route(table, verb, path) {
     Some(result) => {
       println(verb + " " + path + " => " + result.route.name)

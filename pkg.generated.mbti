@@ -1,0 +1,86 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "python123/moonroutekit"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn add_route(RouteTable, Route) -> Result[RouteTable, RouteError]
+
+pub fn check_conflicts(RouteTable) -> Array[RouteDiagnostic]
+
+pub fn compile_pattern(String) -> Result[RoutePattern, RouteError]
+
+pub fn empty_table() -> RouteTable
+
+pub fn format_error(RouteError) -> String
+
+pub fn match_route(RouteTable, String, String) -> MatchResult?
+
+pub fn reverse(RouteTable, String, Array[Param]) -> Result[String, RouteError]
+
+// Errors
+
+// Types and methods
+pub(all) struct CompiledRoute {
+  route : Route
+  compiled : RoutePattern
+  order : Int
+} derive(Eq, @debug.Debug)
+
+pub(all) struct MatchResult {
+  route : Route
+  params : Array[Param]
+  priority : Int
+  order : Int
+} derive(Eq, @debug.Debug)
+
+pub(all) struct Param {
+  key : String
+  value : String
+} derive(Eq, @debug.Debug)
+
+pub(all) struct Route {
+  name : String
+  http_method : String
+  pattern : String
+  handler : String
+} derive(Eq, @debug.Debug)
+
+pub(all) struct RouteDiagnostic {
+  kind : String
+  route : String
+  message : String
+} derive(Eq, @debug.Debug)
+
+pub(all) enum RouteError {
+  MissingLeadingSlash(Int)
+  EmptySegment(Int)
+  EmptyParam(Int)
+  EmptyWildcard(Int)
+  InvalidName(Int, String)
+  WildcardNotFinal(Int)
+  MissingParam(String, String)
+  UnknownRoute(String)
+} derive(Eq, @debug.Debug)
+
+pub(all) struct RoutePattern {
+  source : String
+  segments : Array[Segment]
+} derive(Eq, @debug.Debug)
+
+pub(all) struct RouteTable {
+  routes : Array[CompiledRoute]
+} derive(Eq, @debug.Debug)
+
+pub(all) enum Segment {
+  Static(String)
+  Param(String)
+  Wildcard(String)
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+

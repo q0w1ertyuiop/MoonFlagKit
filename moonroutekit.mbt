@@ -70,7 +70,10 @@ pub fn empty_table() -> RouteTable {
 }
 
 ///|
-pub fn add_route(table : RouteTable, route : Route) -> Result[RouteTable, RouteError] {
+pub fn add_route(
+  table : RouteTable,
+  route : Route,
+) -> Result[RouteTable, RouteError] {
   match compile_pattern(route.pattern) {
     Ok(compiled) => {
       let routes : Array[CompiledRoute] = []
@@ -85,7 +88,11 @@ pub fn add_route(table : RouteTable, route : Route) -> Result[RouteTable, RouteE
 }
 
 ///|
-pub fn match_route(table : RouteTable, verb : String, path : String) -> MatchResult? {
+pub fn match_route(
+  table : RouteTable,
+  verb : String,
+  path : String,
+) -> MatchResult? {
   if path.length() == 0 || path[0] != '/' {
     return None
   }
@@ -110,7 +117,11 @@ pub fn match_route(table : RouteTable, verb : String, path : String) -> MatchRes
 }
 
 ///|
-pub fn reverse(table : RouteTable, name : String, params : Array[Param]) -> Result[String, RouteError] {
+pub fn reverse(
+  table : RouteTable,
+  name : String,
+  params : Array[Param],
+) -> Result[String, RouteError] {
   for compiled in table.routes {
     if compiled.route.name == name {
       return reverse_compiled(compiled, params)
@@ -127,12 +138,18 @@ pub fn check_conflicts(table : RouteTable) -> Array[RouteDiagnostic] {
     let mut reported = false
     for j in 0..<i {
       let previous = table.routes[j]
-      if !reported && same_method_space(previous.route.http_method, current.route.http_method) {
+      if !reported &&
+        same_method_space(previous.route.http_method, current.route.http_method) {
         if previous.route.pattern == current.route.pattern {
           diagnostics.push({
             kind: "duplicate",
             route: current.route.name,
-            message: "duplicates " + previous.route.name + " on " + current.route.http_method + " " + current.route.pattern,
+            message: "duplicates " +
+            previous.route.name +
+            " on " +
+            current.route.http_method +
+            " " +
+            current.route.pattern,
           })
           reported = true
         }
@@ -140,7 +157,8 @@ pub fn check_conflicts(table : RouteTable) -> Array[RouteDiagnostic] {
     }
     for j in 0..<i {
       let previous = table.routes[j]
-      if !reported && same_method_space(previous.route.http_method, current.route.http_method) {
+      if !reported &&
+        same_method_space(previous.route.http_method, current.route.http_method) {
         if previous.route.pattern == current.route.pattern {
           ()
         } else if shadows(previous.compiled, current.compiled) {
@@ -223,7 +241,10 @@ fn match_compiled(route : CompiledRoute, parts : Array[String]) -> MatchResult? 
 }
 
 ///|
-fn reverse_compiled(route : CompiledRoute, params : Array[Param]) -> Result[String, RouteError] {
+fn reverse_compiled(
+  route : CompiledRoute,
+  params : Array[Param],
+) -> Result[String, RouteError] {
   if route.compiled.segments.length() == 0 {
     return Ok("/")
   }
@@ -282,7 +303,11 @@ fn shadows(previous : RoutePattern, current : RoutePattern) -> Bool {
 }
 
 ///|
-fn prefix_matches(previous : RoutePattern, current : RoutePattern, until : Int) -> Bool {
+fn prefix_matches(
+  previous : RoutePattern,
+  current : RoutePattern,
+  until : Int,
+) -> Bool {
   for i in 0..<until {
     match previous.segments[i] {
       Static(value) =>
@@ -338,7 +363,11 @@ fn join_from(parts : Array[String], start : Int) -> String {
 }
 
 ///|
-fn compile_segment(text : String, column : Int, is_final : Bool) -> Result[Segment, RouteError] {
+fn compile_segment(
+  text : String,
+  column : Int,
+  is_final : Bool,
+) -> Result[Segment, RouteError] {
   if text.length() == 0 {
     return Err(EmptySegment(column))
   }
@@ -380,20 +409,26 @@ fn valid_name(input : String) -> Bool {
 
 ///|
 fn is_name_char(c : Char) -> Bool {
-  (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-  (c >= '0' && c <= '9') || c == '_'
+  (c >= 'a' && c <= 'z') ||
+  (c >= 'A' && c <= 'Z') ||
+  (c >= '0' && c <= '9') ||
+  c == '_'
 }
 
 ///|
 pub fn format_error(err : RouteError) -> String {
   match err {
-    MissingLeadingSlash(column) => "column \{column}: route pattern must start with /"
+    MissingLeadingSlash(column) =>
+      "column \{column}: route pattern must start with /"
     EmptySegment(column) => "column \{column}: empty path segment"
     EmptyParam(column) => "column \{column}: missing parameter name"
     EmptyWildcard(column) => "column \{column}: missing wildcard name"
-    InvalidName(column, name) => "column \{column}: invalid parameter name " + name
-    WildcardNotFinal(column) => "column \{column}: wildcard must be the final segment"
-    MissingParam(route, name) => "missing parameter " + name + " for route " + route
+    InvalidName(column, name) =>
+      "column \{column}: invalid parameter name " + name
+    WildcardNotFinal(column) =>
+      "column \{column}: wildcard must be the final segment"
+    MissingParam(route, name) =>
+      "missing parameter " + name + " for route " + route
     UnknownRoute(name) => "unknown route name " + name
   }
 }
