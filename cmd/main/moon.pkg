@@ -1,6 +1,6 @@
-// import {
-//   "python123/moonroutekit" @lib,
-// }
+import {
+  "python123/moonroutekit" @routekit
+}
 
 options(
   "is-main": true,
