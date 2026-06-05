@@ -25,6 +25,14 @@ fn param_value(result : @moonroutekit.MatchResult, key : String) -> String {
 }
 
 ///|
+fn sample_table() -> @moonroutekit.RouteTable {
+  let table = @moonroutekit.empty_table()
+  let table = add_ok(table, { name: "users.index", http_method: "GET", pattern: "/users", handler: "list_users" })
+  let table = add_ok(table, { name: "users.show", http_method: "GET", pattern: "/users/:id", handler: "show_user" })
+  add_ok(table, { name: "assets.show", http_method: "GET", pattern: "/assets/*path", handler: "asset" })
+}
+
+///|
 test "compile root static param and wildcard patterns" {
   let root = pattern_ok("/")
   assert_eq(root.source, "/")
@@ -83,5 +91,33 @@ test "prefer static route over param and wildcard routes" {
       assert_eq(param_value(result, "path"), "logo/png")
     }
     None => abort("expected wildcard route match")
+  }
+}
+
+///|
+test "reverse generate paths from named routes" {
+  let table = sample_table()
+  match @moonroutekit.reverse(table, "users.show", [{ key: "id", value: "42" }]) {
+    Ok(path) => assert_eq(path, "/users/42")
+    Err(err) => abort("unexpected reverse error: " + @moonroutekit.format_error(err))
+  }
+  match @moonroutekit.reverse(table, "assets.show", [{ key: "path", value: "logo/png" }]) {
+    Ok(path) => assert_eq(path, "/assets/logo/png")
+    Err(err) => abort("unexpected wildcard reverse error: " + @moonroutekit.format_error(err))
+  }
+}
+
+///|
+test "reverse reports missing params and unknown route names" {
+  let table = sample_table()
+  match @moonroutekit.reverse(table, "users.show", []) {
+    Err(err) =>
+      assert_eq(@moonroutekit.format_error(err), "missing parameter id for route users.show")
+    Ok(_) => abort("expected missing parameter error")
+  }
+  match @moonroutekit.reverse(table, "users.edit", []) {
+    Err(err) =>
+      assert_eq(@moonroutekit.format_error(err), "unknown route name users.edit")
+    Ok(_) => abort("expected unknown route error")
   }
 }

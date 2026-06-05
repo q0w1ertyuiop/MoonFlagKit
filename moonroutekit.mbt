@@ -53,6 +53,8 @@ pub(all) enum RouteError {
   EmptyWildcard(Int)
   InvalidName(Int, String)
   WildcardNotFinal(Int)
+  MissingParam(String, String)
+  UnknownRoute(String)
 } derive(Eq, Debug)
 
 ///|
@@ -98,6 +100,16 @@ pub fn match_route(table : RouteTable, verb : String, path : String) -> MatchRes
     }
   }
   best
+}
+
+///|
+pub fn reverse(table : RouteTable, name : String, params : Array[Param]) -> Result[String, RouteError] {
+  for compiled in table.routes {
+    if compiled.route.name == name {
+      return reverse_compiled(compiled, params)
+    }
+  }
+  Err(UnknownRoute(name))
 }
 
 ///|
@@ -163,6 +175,41 @@ fn match_compiled(route : CompiledRoute, parts : Array[String]) -> MatchResult? 
     return None
   }
   Some({ route: route.route, params, priority, order: route.order })
+}
+
+///|
+fn reverse_compiled(route : CompiledRoute, params : Array[Param]) -> Result[String, RouteError] {
+  if route.compiled.segments.length() == 0 {
+    return Ok("/")
+  }
+  let out = StringBuilder()
+  for segment in route.compiled.segments {
+    out.write_char('/')
+    match segment {
+      Static(value) => out.write_string(value)
+      Param(name) =>
+        match lookup_param(params, name) {
+          Some(value) => out.write_string(value)
+          None => return Err(MissingParam(route.route.name, name))
+        }
+      Wildcard(name) =>
+        match lookup_param(params, name) {
+          Some(value) => out.write_string(value)
+          None => return Err(MissingParam(route.route.name, name))
+        }
+    }
+  }
+  Ok(out.to_string())
+}
+
+///|
+fn lookup_param(params : Array[Param], key : String) -> String? {
+  for param in params {
+    if param.key == key {
+      return Some(param.value)
+    }
+  }
+  None
 }
 
 ///|
@@ -261,5 +308,7 @@ pub fn format_error(err : RouteError) -> String {
     EmptyWildcard(column) => "column \{column}: missing wildcard name"
     InvalidName(column, name) => "column \{column}: invalid parameter name " + name
     WildcardNotFinal(column) => "column \{column}: wildcard must be the final segment"
+    MissingParam(route, name) => "missing parameter " + name + " for route " + route
+    UnknownRoute(name) => "unknown route name " + name
   }
 }
