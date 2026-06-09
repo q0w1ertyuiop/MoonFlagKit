@@ -8,8 +8,8 @@
 \setlength{\parindent}{2em}
 \setlength{\parskip}{0.35em}
 
-\title{\textbf{MoonRouteKit 项目申报书}\\MoonBit 路由模式编译与请求匹配内核}
-\author{python123}
+\title{\textbf{MoonFlagKit 项目申报书}\\MoonBit 功能开关与灰度发布决策引擎}
+\author{参赛项目组}
 \date{2026 年 6 月}
 
 \begin{document}
@@ -18,50 +18,75 @@
 \newpage
 
 \section{项目名称}
-MoonRouteKit：MoonBit 路由模式编译与请求匹配内核。
+
+MoonFlagKit：面向 MoonBit 的轻量级功能开关与灰度发布决策引擎。
 
 \section{仓库链接}
+
 \begin{itemize}
-  \item GitLink 仓库：\url{https://gitlink.org.cn/python123/moonroutekit}
-  \item GitHub 仓库：\url{https://github.com/python123-ops/moonroutekit}
+  \item GitLink 仓库：\url{https://www.gitlink.org.cn/a18265059561/moonflagkit}
+  \item GitHub 仓库：\url{https://github.com/q0w1ertyuiop/moonflagkit}
 \end{itemize}
 
 \section{项目简介}
-MoonRouteKit 是一个面向 MoonBit 生态的轻量级 URL 路由核心库，提供路径模式编译、HTTP 方法匹配、参数提取、命名路由反向生成和路由冲突诊断能力。项目定位在 Web 框架底层的可复用内核，不绑定具体服务器、运行时或响应模型，适合 MoonBit 服务端示例、边缘计算实验、Wasm 服务原型和教学场景复用。
+
+MoonFlagKit 是一个用 MoonBit 实现的功能开关决策库。它接收功能开关配置和运行时上下文，返回某个功能是否应该开启，并给出简短原因。项目当前版本不做配置中心、控制台、网络同步或数据统计，只把核心判断逻辑先做稳定，方便后续被 Web 服务、Wasm 边缘函数、命令行工具或教学示例复用。
+
+这个选题来自实际工程里常见的需求：新功能不能一次性放给所有用户，出问题时也需要快速关闭；有些功能只希望在生产环境、指定地区、指定用户或一小部分流量中开启。MoonFlagKit 把这些判断抽成一个小内核，让 MoonBit 项目可以先具备可测试的灰度发布能力。
 
 \section{项目方向与适用场景}
-MoonBit 生态正在扩展到浏览器、Wasm、服务端实验和工程化教学等场景。很多示例项目需要把请求路径映射到处理逻辑，但直接实现完整 Web 框架成本较高。MoonRouteKit 提供一个小而稳定的路由匹配核心，使开发者可以在不同运行时中复用同一套路由规则。
 
-适用场景包括：
+项目方向属于基础工程组件，重点是运行时配置决策和渐进式发布。它适合以下场景：
+
 \begin{itemize}
-  \item MoonBit HTTP 服务示例的请求分发。
-  \item 边缘函数和 Wasm 服务中的路径匹配。
-  \item 网关原型、课程实验和框架教学中的路由内核。
-  \item 需要命名路由反向生成的轻量级服务组件。
+  \item MoonBit 服务端示例中按用户、环境或地区开启功能；
+  \item Wasm 或边缘函数中根据本地配置做轻量判断；
+  \item 命令行工具或自动化流程中控制实验性逻辑；
+  \item 教学项目中展示功能开关、灰度发布、kill switch 等工程概念；
+  \item 后续扩展为 OpenFeature 风格 SDK、远程配置 provider 或实验分流组件。
 \end{itemize}
 
-\section{拟实现的核心功能}
-\begin{longtable}{p{4cm}p{10cm}}
-\textbf{功能模块} & \textbf{说明} \\
-路径模式编译 & 支持根路径、静态路径、参数片段和最终通配片段。 \\
-请求匹配 & 支持 HTTP 方法过滤和确定性优先级选择。 \\
-参数提取 & 将匹配得到的动态片段输出为稳定键值对。 \\
-反向生成 & 根据命名路由和参数生成 URL。 \\
-冲突诊断 & 检测重复路由和通配路由遮蔽问题。 \\
-CLI 示例 & 展示匹配、参数提取、反向生成和诊断输出。 \\
+\section{核心功能}
+
+\begin{longtable}{p{3.5cm}p{10.5cm}}
+\textbf{功能} & \textbf{说明} \\
+布尔功能开关 & 支持开启、关闭和默认关闭行为。\\
+精准规则 & 支持 allowlist 和 denylist，且 denylist 优先级更高。\\
+上下文条件 & 支持 environment 以及自定义属性的等值匹配。\\
+百分比灰度 & 使用稳定 bucket，使同一用户在同一 salt 下结果稳定。\\
+配置解析 & 支持简洁的行式配置，便于 CLI 和测试演示。\\
+配置诊断 & 检查重复 flag、空名称、非法 rollout 等问题。\\
+决策解释 & 每次评估都会返回原因，便于排查配置问题。\\
+CLI 示例 & 展示不同用户上下文下的开关结果。\\
 \end{longtable}
 
 \section{技术路线}
-MoonRouteKit 将路径模式编译为片段数组，匹配时先过滤方法，再逐段比较请求路径。静态片段获得最高优先级，参数片段次之，通配片段最低。该规则保证匹配结果可预测，也便于测试和审查。
 
-反向生成阶段通过命名路由定位编译后的路径模式，将参数片段替换为调用方传入的值。若缺少必需参数，函数返回结构化错误，避免产生不完整 URL。
+项目把功能开关定义为 \texttt{Flag}，把运行时输入定义为 \texttt{EvalContext}。评估过程按固定顺序执行：先判断 flag 是否整体关闭，再检查 denylist，然后检查 allowlist，之后校验环境和属性条件，最后进入百分比灰度分桶。
 
-诊断阶段扫描路由表，发现重复路径和通配遮蔽。诊断结果可在 CLI、测试或上层框架初始化阶段展示。
+灰度分桶使用 \texttt{bucket(subject, salt)} 得到 \texttt{0..99} 的稳定整数。只要用户标识和 salt 不变，结果就不会漂移。这样可以避免一个用户在多次请求中反复进入和退出同一功能。
 
-\section{原创说明}
-本项目为原创实现，不移植既有开源项目源码。项目选题聚焦 MoonBit Web 与边缘服务实验中的路由内核，区别于数据表处理、日志查询、项目元数据检查、构建证据记录、数据流分析等方向。实现不引入外部依赖，核心算法、测试样例和文档均围绕 MoonBit 生态的轻量级服务组件需求设计。
+解析器暂时采用行式配置，例如：
 
-\section{阶段成果}
-当前仓库包含 MoonBit 核心库代码、黑盒测试用例、CLI 演示程序、设计文档、验收清单和申报书材料。后续可继续补充基准测试、更多路径规范策略和与 MoonBit HTTP 示例项目的集成演示。
+\begin{verbatim}
+flag checkout_v2 enabled=true rollout=35 salt=summer
+allow checkout_v2 ops-admin
+deny checkout_v2 blocked-user
+when checkout_v2 environment=prod
+\end{verbatim}
+
+这种格式不追求覆盖所有配置语言，而是服务于当前阶段的演示、测试和手写配置。后续可以在不改核心评估函数的情况下增加 JSON、TOML 或远程 provider。
+
+\section{原创与不重合说明}
+
+本项目为原创实现，不移植已有开源项目代码，不引入外部 MoonBit 依赖。项目重新选择了功能开关与灰度发布决策方向，源码、测试、文档和 CLI 示例均围绕这一方向重新组织，不复用之前仓库的业务设计。
+
+在重新选题前，已检索 Mooncakes 上的相关项目，发现原方向已有同类包，因此改为 MoonFlagKit。功能开关与灰度发布决策在后端和云原生工程中比较成熟，同时目前在 MoonBit 包生态中不是常见主题，适合作为可继续扩展的基础组件。
+
+\section{当前完成情况}
+
+仓库包含 MoonBit 核心库、黑盒测试、CLI 示例、README、设计文档、验收清单和本申报材料。当前测试覆盖功能开关关闭、白名单、黑名单、属性条件、稳定分桶、配置解析和诊断输出。
+
+后续计划包括：支持多变体实验、补充 JSON/TOML 配置入口、增加更丰富的条件表达式、提供 OpenFeature 风格接口，并尝试和 MoonBit Web/Wasm 示例项目集成。
 
 \end{document}

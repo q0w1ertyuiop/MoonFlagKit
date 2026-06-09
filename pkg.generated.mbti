@@ -1,83 +1,73 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "python123/moonroutekit"
+package "a18265059561/moonflagkit"
 
 import {
   "moonbitlang/core/debug",
 }
 
 // Values
-pub fn add_route(RouteTable, Route) -> Result[RouteTable, RouteError]
+pub fn bucket(String, String) -> Int
 
-pub fn check_conflicts(RouteTable) -> Array[RouteDiagnostic]
+pub fn evaluate(Flag, EvalContext) -> Decision
 
-pub fn compile_pattern(String) -> Result[RoutePattern, RouteError]
+pub fn evaluate_all(Array[Flag], EvalContext) -> Array[Decision]
 
-pub fn empty_table() -> RouteTable
+pub fn explain(Decision) -> String
 
-pub fn format_error(RouteError) -> String
+pub fn format_error(FlagError) -> String
 
-pub fn match_route(RouteTable, String, String) -> MatchResult?
+pub fn parse_flags(String) -> Result[Array[Flag], FlagError]
 
-pub fn reverse(RouteTable, String, Array[Param]) -> Result[String, RouteError]
+pub fn validate_flags(Array[Flag]) -> Array[FlagDiagnostic]
 
 // Errors
 
 // Types and methods
-pub(all) struct CompiledRoute {
-  route : Route
-  compiled : RoutePattern
-  order : Int
-} derive(Eq, @debug.Debug)
-
-pub(all) struct MatchResult {
-  route : Route
-  params : Array[Param]
-  priority : Int
-  order : Int
-} derive(Eq, @debug.Debug)
-
-pub(all) struct Param {
+pub(all) struct Attribute {
   key : String
   value : String
 } derive(Eq, @debug.Debug)
 
-pub(all) struct Route {
-  name : String
-  http_method : String
-  pattern : String
-  handler : String
+pub(all) enum Condition {
+  Equals(String, String)
 } derive(Eq, @debug.Debug)
 
-pub(all) struct RouteDiagnostic {
+pub(all) struct Decision {
+  flag : String
+  enabled : Bool
+  reason : String
+} derive(Eq, @debug.Debug)
+
+pub(all) struct EvalContext {
+  subject : String
+  environment : String
+  attributes : Array[Attribute]
+} derive(Eq, @debug.Debug)
+
+pub(all) struct Flag {
+  name : String
+  enabled : Bool
+  default_enabled : Bool
+  rollout : Int
+  salt : String
+  rules : Array[Rule]
+} derive(Eq, @debug.Debug)
+
+pub(all) struct FlagDiagnostic {
   kind : String
-  route : String
+  flag : String
   message : String
 } derive(Eq, @debug.Debug)
 
-pub(all) enum RouteError {
-  MissingLeadingSlash(Int)
-  EmptySegment(Int)
-  EmptyParam(Int)
-  EmptyWildcard(Int)
-  InvalidName(Int, String)
-  WildcardNotFinal(Int)
-  MissingParam(String, String)
-  UnknownRoute(String)
+pub(all) enum FlagError {
+  ParseError(Int, String)
+  UnknownFlag(Int, String)
 } derive(Eq, @debug.Debug)
 
-pub(all) struct RoutePattern {
-  source : String
-  segments : Array[Segment]
-} derive(Eq, @debug.Debug)
-
-pub(all) struct RouteTable {
-  routes : Array[CompiledRoute]
-} derive(Eq, @debug.Debug)
-
-pub(all) enum Segment {
-  Static(String)
-  Param(String)
-  Wildcard(String)
+pub(all) enum Rule {
+  Allow(String)
+  Deny(String)
+  When(String, String)
 } derive(Eq, @debug.Debug)
 
 // Type aliases

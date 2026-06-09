@@ -1,52 +1,51 @@
-# MoonRouteKit Design
+# MoonFlagKit Design
 
-## Positioning
+MoonFlagKit is a feature-flag decision kernel for MoonBit. It only answers one question: given a flag definition and a runtime context, should this feature be enabled, and why? The library stays below the platform layer. It does not own storage, network sync, dashboards, authentication, or analytics.
 
-MoonRouteKit is a MoonBit route matching kernel for HTTP-style service experiments. It deliberately stays below the framework layer: no network server, no middleware stack, no response abstraction. The library only owns path pattern compilation, request matching, parameter extraction, reverse path generation, and route diagnostics.
+## Decision Model
 
-## Pattern Model
+A `Flag` contains a name, enabled state, default value, rollout percentage, salt, and an ordered rule list. An `EvalContext` contains the evaluated subject, environment, and arbitrary key-value attributes.
 
-Supported patterns:
+Evaluation is deterministic:
 
-- `/`
-- `/users`
-- `/users/:id`
-- `/users/:id/posts/:post_id`
-- `/assets/*path`
+1. A disabled flag returns off immediately.
+2. `Deny` rules are checked before all other rules.
+3. `Allow` rules can enable a subject before rollout.
+4. `When` rules must all match the context.
+5. Rollout uses `bucket(subject, flag.name + ":" + flag.salt)`.
 
-Segments are compiled into three forms:
+This keeps the result easy to explain in tests and in CLI output. It also avoids hidden ordering surprises when flags are reviewed by another developer.
 
-- `Static(value)` for literal segments.
-- `Param(name)` for one-segment captures.
-- `Wildcard(name)` for final multi-segment captures.
+## Stable Rollout
 
-Wildcard segments must be final. Parameter names accept letters, digits, and `_`.
+The `bucket` function maps a subject and salt into a number from 0 to 99. If the bucket is lower than the rollout percentage, the feature is enabled. Reusing the same subject and salt gives the same result, which matters for canary rollout and A/B-style experiments.
 
-## Matching Rule
+The current hash is intentionally simple and dependency-free. A future version can replace the hash implementation while preserving the public `bucket` contract.
 
-Route matching checks method space first. A route with `ANY` accepts every method; otherwise the method must match exactly.
+## Configuration Parser
 
-When multiple routes match the same request, the priority score is deterministic:
+The first parser handles a small line-oriented format:
 
-- static segment: 100
-- parameter segment: 10
-- wildcard segment: 1
+```text
+flag checkout_v2 enabled=true rollout=35 salt=summer
+allow checkout_v2 ops-admin
+deny checkout_v2 blocked-user
+when checkout_v2 environment=prod
+```
 
-The highest score wins. Equal scores keep registration order.
+The format is good enough for examples, tests, and hand-written configs. Larger integrations can build `Flag` values directly or add a provider on top of the same evaluation API.
 
-## Reverse Generation
+## Error And Diagnostic Model
 
-Named routes can be turned back into paths. Static segments are copied. Parameter and wildcard segments are filled from `Array[Param]`. Missing values return a structured `RouteError`.
+Parse errors report the line number and a short message. Validation diagnostics are separate from parsing so callers can load several flags and show all configuration problems at once. The current diagnostics cover duplicate names, empty names, and rollout values outside `0..100`.
 
-## Diagnostics
+## Extension Points
 
-`check_conflicts` scans the registered route table and reports:
+The project can grow in several directions without changing the v0.1 core:
 
-- duplicate method and pattern pairs
-- routes shadowed by an earlier wildcard route
-
-Each route reports only the highest-priority issue, so duplicate entries do not produce noisy secondary warnings.
-
-## Error Model
-
-`RouteError` keeps errors compact and deterministic. `format_error` converts them into review-friendly text for tests, CLI output, and documentation.
+- multi-variant flags for experiments;
+- JSON or TOML providers;
+- remote refresh adapters;
+- OpenFeature-style facade APIs;
+- richer conditions such as prefix, set membership, and numeric comparison;
+- audit records for decisions made in service-side code.

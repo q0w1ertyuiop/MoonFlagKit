@@ -9,16 +9,22 @@
 //   "moonbitlang/x@0.4.6",
 // }
 
-name = "python123/moonroutekit"
+name = "a18265059561/moonflagkit"
 
 version = "0.1.0"
 
 readme = "README.md"
 
-repository = "https://github.com/python123-ops/moonroutekit"
+repository = "https://github.com/q0w1ertyuiop/moonflagkit"
 
 license = "Apache-2.0"
 
-keywords = [ "router", "http", "url", "routing", "moonbit" ]
+keywords = [
+  "feature-flag",
+  "rollout",
+  "configuration",
+  "progressive-delivery",
+  "moonbit",
+]
 
-description = "A lightweight MoonBit route pattern compiler, URL matcher, reverse path generator, and route diagnostic toolkit."
+description = "A lightweight MoonBit feature flag and progressive rollout decision engine."

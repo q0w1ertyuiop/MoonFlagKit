@@ -1,61 +1,57 @@
 ///|
 fn main {
-  let table = @routekit.empty_table()
-  let table = add_route(table, "home", "GET", "/", "home")
-  let table = add_route(table, "users.show", "GET", "/users/:id", "show_user")
-  let table = add_route(table, "assets.any", "ANY", "/assets/*path", "asset")
-  let table = add_route(table, "assets.logo", "GET", "/assets/logo", "logo")
-
-  println("MoonRouteKit demo")
-  show_match(table, "GET", "/users/42")
-  show_match(table, "GET", "/assets/logo")
-  show_match(table, "POST", "/assets/docs/readme")
-
-  match @routekit.reverse(table, "users.show", [{ key: "id", value: "42" }]) {
-    Ok(path) => println("reverse users.show => " + path)
-    Err(err) => println("reverse error: " + @routekit.format_error(err))
+  let source =
+    #|flag checkout_v2 enabled=true rollout=35 salt=summer
+    #|allow checkout_v2 ops-admin
+    #|deny checkout_v2 blocked-user
+    #|when checkout_v2 environment=prod
+    #|when checkout_v2 country=CN
+    #|
+  match @moonflagkit.parse_flags(source) {
+    Ok(flags) => run_demo(flags)
+    Err(err) => abort(@moonflagkit.format_error(err))
   }
+}
+
+///|
+fn run_demo(flags : Array[@moonflagkit.Flag]) -> Unit {
+  println("MoonFlagKit demo")
+  show_decisions(flags, {
+    subject: "ops-admin",
+    environment: "prod",
+    attributes: [{ key: "country", value: "CN" }],
+  })
+  show_decisions(flags, {
+    subject: "blocked-user",
+    environment: "prod",
+    attributes: [{ key: "country", value: "CN" }],
+  })
+  show_decisions(flags, {
+    subject: "visitor-42",
+    environment: "prod",
+    attributes: [{ key: "country", value: "CN" }],
+  })
 
   println("--- diagnostics ---")
-  let diagnostics = @routekit.check_conflicts(table)
+  let diagnostics = @moonflagkit.validate_flags(flags)
   if diagnostics.length() == 0 {
     println("none")
   } else {
     for diagnostic in diagnostics {
       println(
-        diagnostic.kind + " " + diagnostic.route + ": " + diagnostic.message,
+        diagnostic.kind + " " + diagnostic.flag + ": " + diagnostic.message,
       )
     }
   }
 }
 
 ///|
-fn add_route(
-  table : @routekit.RouteTable,
-  name : String,
-  http_method : String,
-  pattern : String,
-  handler : String,
-) -> @routekit.RouteTable {
-  match @routekit.add_route(table, { name, http_method, pattern, handler }) {
-    Ok(next) => next
-    Err(err) => abort("route error: " + @routekit.format_error(err))
-  }
-}
-
-///|
-fn show_match(
-  table : @routekit.RouteTable,
-  verb : String,
-  path : String,
+fn show_decisions(
+  flags : Array[@moonflagkit.Flag],
+  context : @moonflagkit.EvalContext,
 ) -> Unit {
-  match @routekit.match_route(table, verb, path) {
-    Some(result) => {
-      println(verb + " " + path + " => " + result.route.name)
-      for param in result.params {
-        println("  " + param.key + "=" + param.value)
-      }
-    }
-    None => println(verb + " " + path + " => no match")
+  println("subject=" + context.subject + " env=" + context.environment)
+  for decision in @moonflagkit.evaluate_all(flags, context) {
+    println("  " + @moonflagkit.explain(decision))
   }
 }

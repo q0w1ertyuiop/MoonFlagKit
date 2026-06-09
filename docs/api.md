@@ -1,41 +1,39 @@
-# MoonRouteKit API Notes
+# MoonFlagKit API Notes
 
-## Route Construction
+## Types
 
-Use `empty_table` to create an empty route table, then register routes with `add_route`.
+- `Attribute`: one key-value attribute in the evaluation context.
+- `EvalContext`: subject, environment, and attributes supplied at runtime.
+- `Rule`: `Allow`, `Deny`, or `When`.
+- `Flag`: a boolean feature flag with rollout and rules.
+- `Decision`: enabled state plus a human-readable reason.
+- `FlagDiagnostic`: validation result for loaded flags.
+- `FlagError`: parser or lookup error.
+
+## Evaluation
 
 ```moonbit
-let table = @moonroutekit.empty_table()
-let table = match @moonroutekit.add_route(table, {
-  name: "users.show",
-  http_method: "GET",
-  pattern: "/users/:id",
-  handler: "show_user",
-}) {
-  Ok(next) => next
-  Err(err) => abort(@moonroutekit.format_error(err))
-}
+let decision = @moonflagkit.evaluate(flag, context)
+println(@moonflagkit.explain(decision))
 ```
 
-## Matching
+Use `evaluate_all` when a caller wants to check a batch of flags for the same context.
 
-`match_route` returns `MatchResult?`. A successful match contains the selected route, extracted params, priority score, and registration order.
+## Parsing
 
 ```moonbit
-match @moonroutekit.match_route(table, "GET", "/users/42") {
-  Some(result) => println(result.route.name)
-  None => println("no match")
+let source =
+  #|flag checkout_v2 enabled=true rollout=35 salt=summer
+  #|allow checkout_v2 ops-admin
+  #|when checkout_v2 environment=prod
+  #|
+
+match @moonflagkit.parse_flags(source) {
+  Ok(flags) => println(flags.length().to_string())
+  Err(err) => println(@moonflagkit.format_error(err))
 }
-```
-
-## Reverse Generation
-
-Use `reverse` with a named route and parameter list.
-
-```moonbit
-@moonroutekit.reverse(table, "users.show", [{ key: "id", value: "42" }])
 ```
 
 ## Diagnostics
 
-Use `check_conflicts` before exposing a route table through an application. The function reports duplicate routes and wildcard shadowing in registration order.
+`validate_flags` does not stop at the first problem. It returns all diagnostics it can find in the supplied array, which is useful for CLI tools or config loading steps.
