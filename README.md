@@ -2,6 +2,8 @@
 
 MoonFlagKit is a small MoonBit library for feature flags and progressive rollout decisions. It is meant for service demos, Wasm edge experiments, command-line tools, and runtime configuration prototypes that need predictable flag evaluation without pulling in a server or configuration platform.
 
+Core contributor: 王正本人
+
 The first version focuses on a compact decision engine:
 
 - boolean feature flags;

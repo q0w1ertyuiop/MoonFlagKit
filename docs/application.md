@@ -9,6 +9,8 @@ MoonFlagKit：面向 MoonBit 的轻量级功能开关与灰度发布决策引擎
 - GitLink 仓库：https://www.gitlink.org.cn/a18265059561/MoonRouteKit
 - GitHub 仓库：https://github.com/q0w1ertyuiop/MoonBit-
 
+核心贡献者：王正本人
+
 ## 3. 项目简介
 
 MoonFlagKit 是一个用 MoonBit 实现的功能开关决策库。它接收功能开关配置和运行时上下文，返回某个功能是否应该开启，并给出简短原因。项目当前版本不做配置中心、控制台、网络同步或数据统计，只把核心判断逻辑先做稳定，方便后续被 Web 服务、Wasm 边缘函数、命令行工具或教学示例复用。
