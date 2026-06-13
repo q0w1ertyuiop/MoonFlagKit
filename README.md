@@ -76,8 +76,8 @@ The format is intentionally narrow in v0.1. A future version can add JSON, TOML,
 
 ## Repository Links
 
-- GitLink: https://www.gitlink.org.cn/a18265059561/MoonRouteKit
-- GitHub: https://github.com/q0w1ertyuiop/MoonBit-
+- GitLink: https://www.gitlink.org.cn/a18265059561/MoonFlagKit
+- GitHub: https://github.com/q0w1ertyuiop/MoonFlagKit
 
 ## Competition Positioning
 

@@ -15,7 +15,7 @@ version = "0.1.0"
 
 readme = "README.md"
 
-repository = "https://github.com/q0w1ertyuiop/MoonBit-"
+repository = "https://github.com/q0w1ertyuiop/MoonFlagKit"
 
 license = "Apache-2.0"
 
