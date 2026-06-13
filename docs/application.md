@@ -6,8 +6,8 @@ MoonFlagKit：面向 MoonBit 的轻量级功能开关与灰度发布决策引擎
 
 ## 2. 仓库链接
 
-- GitLink 仓库：https://www.gitlink.org.cn/a18265059561/MoonRouteKit
-- GitHub 仓库：https://github.com/q0w1ertyuiop/MoonBit-
+- GitLink 仓库：https://www.gitlink.org.cn/a18265059561/MoonFlagKit
+- GitHub 仓库：https://github.com/q0w1ertyuiop/MoonFlagKit
 
 核心贡献者：王正本人
 
